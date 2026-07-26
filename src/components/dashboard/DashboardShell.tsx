@@ -8,26 +8,39 @@ import { AlertPanel } from './AlertPanel'
 import { PriorityActions } from './PriorityActions'
 import { ReservationList } from './ReservationList'
 import { ObjectiveCard } from './ObjectiveCard'
+import { CalendarDays } from 'lucide-react'
 
 export function DashboardShell() {
-  const summary = getDashboardSummary()
-  const weeklyData = getWeeklySalesData()
+  const summary     = getDashboardSummary()
+  const weeklyData  = getWeeklySalesData()
+
+  const dateLabel = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  })
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-5 gap-4">
+    <div className="space-y-6 max-w-[1400px] mx-auto animate-fade-up">
+
+      {/* ── Page header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100">Tableau de bord</h1>
-          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">Vue d&apos;ensemble du {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1.5">
+            <CalendarDays className="w-3.5 h-3.5" />
+            {dateLabel}
+          </p>
+          <h1 className="text-3xl font-serif font-bold text-foreground leading-tight">
+            Tableau de bord
+          </h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">Service en cours : Midi</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-pine/10 border border-pine/20 text-pine text-xs font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-pine animate-pulse-dot" />
+            Service en cours — Midi
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards ── */}
       <KpiCards
         dailyRevenue={summary.daily_revenue}
         yesterdayRevenue={summary.yesterday_revenue}
@@ -40,30 +53,42 @@ export function DashboardShell() {
         actualHours={summary.actual_hours}
       />
 
-      {/* Main grid: Charts + Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Chart */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border bg-white dark:bg-stone-900 p-6 shadow-sm">
-            <h3 className="font-serif text-lg font-bold text-stone-900 dark:text-stone-100 mb-4">Chiffre d&apos;affaires — 7 derniers jours</h3>
+      {/* ── Main grid: Chart + Right panel ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left column: chart + objectives */}
+        <div className="lg:col-span-2 space-y-5">
+          <div className="rounded-xl border bg-card p-5 shadow-card">
+            <h3 className="font-serif text-lg font-bold text-foreground mb-4">
+              Chiffre d&apos;affaires — 7 derniers jours
+            </h3>
             <RevenueChart data={weeklyData} type="bar" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ObjectiveCard title="Objectif journalier" current={summary.daily_revenue} objective={summary.daily_objective} />
-            <ObjectiveCard title="Couverts aujourd&apos;hui" current={summary.covers} objective={90} unit="" color="orange" />
+            <ObjectiveCard
+              title="Objectif journalier"
+              current={summary.daily_revenue}
+              objective={summary.daily_objective}
+            />
+            <ObjectiveCard
+              title="Couverts aujourd&apos;hui"
+              current={summary.covers}
+              objective={90}
+              unit=""
+              color="orange"
+            />
           </div>
         </div>
 
-        {/* Right sidebar */}
+        {/* Right column: health + actions */}
         <div className="space-y-4">
           <HealthScore score={summary.health_score} />
           <PriorityActions actions={summary.priority_actions} />
         </div>
       </div>
 
-      {/* Bottom section: Alerts + Reservations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Bottom: Alerts + Reservations ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <AlertPanel alerts={summary.alerts} />
         <ReservationList reservations={DEMO_RESERVATIONS} />
       </div>

@@ -9,40 +9,63 @@ interface KPICardProps {
   subtitle: string
   trend: 'up' | 'down' | 'neutral'
   icon: React.ReactNode
+  progress?: number        // 0-100, optional progress bar
   color: 'green' | 'orange' | 'red' | 'blue'
+  delay?: number
 }
 
-function KPICard({ title, value, subtitle, trend, icon, color }: KPICardProps) {
-  const colorLabels = {
-    green: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/40',
-    orange: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800/40',
-    red: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40',
-    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40',
-  }
+const colorMap = {
+  green:  { icon: 'text-pine bg-pine/10 border-pine/20',    bar: 'bg-pine',        text: 'text-pine' },
+  orange: { icon: 'text-ember bg-ember/10 border-ember/20', bar: 'bg-ember',       text: 'text-ember' },
+  red:    { icon: 'text-red-500 bg-red-500/10 border-red-500/20', bar: 'bg-red-500', text: 'text-red-500' },
+  blue:   { icon: 'text-blue-500 bg-blue-500/10 border-blue-500/20', bar: 'bg-blue-500', text: 'text-blue-500' },
+}
 
+function KPICard({ title, value, subtitle, trend, icon, progress, color, delay = 0 }: KPICardProps) {
+  const c = colorMap[color]
   return (
-    <div className="rounded-xl border bg-white dark:bg-stone-900 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-      <div className="flex items-center justify-between mb-3 text-stone-500 dark:text-stone-400">
-        <span className="text-xs font-semibold uppercase tracking-wider">{title}</span>
-        <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center border', colorLabels[color])}>
+    <div
+      className="rounded-xl border bg-card p-5 shadow-card card-lift animate-fade-up relative overflow-hidden"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {/* Top row */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          {title}
+        </span>
+        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center border', c.icon)}>
           {icon}
         </div>
       </div>
-      <div className="space-y-1">
-        <p className="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100">{value}</p>
-        <div className="flex items-center gap-1.5">
-          {trend === 'up' && <TrendingUp className="w-3.5 h-3.5 text-green-500" />}
-          {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-red-500" />}
-          <span className={cn(
-            'text-xs font-medium',
-            trend === 'up' && 'text-green-600 dark:text-green-400',
-            trend === 'down' && 'text-red-600 dark:text-red-400',
-            trend === 'neutral' && 'text-stone-500 dark:text-stone-400'
-          )}>
-            {subtitle}
-          </span>
-        </div>
+
+      {/* Value — JetBrains Mono for data */}
+      <p className="font-data text-[2rem] font-bold leading-none tracking-tight text-foreground mb-2">
+        {value}
+      </p>
+
+      {/* Trend row */}
+      <div className="flex items-center gap-1.5">
+        {trend === 'up'   && <TrendingUp  className="w-3.5 h-3.5 text-pine shrink-0" />}
+        {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+        <span className={cn(
+          'text-xs font-medium',
+          trend === 'up'      && 'text-pine',
+          trend === 'down'    && 'text-red-500',
+          trend === 'neutral' && 'text-muted-foreground'
+        )}>
+          {subtitle}
+        </span>
       </div>
+
+      {/* Progress bar */}
+      {progress !== undefined && (
+        <div className="mt-4 h-1 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className={cn('h-full rounded-full transition-all duration-700', c.bar)}
+            style={{ width: `${Math.min(100, progress)}%` }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -60,52 +83,54 @@ interface KpiCardsProps {
 }
 
 export function KpiCards({
-  dailyRevenue,
-  yesterdayRevenue,
-  covers,
-  avgBasket,
-  fillRate,
-  dailyObjective,
-  estimatedMargin,
-  plannedHours,
-  actualHours,
+  dailyRevenue, yesterdayRevenue, covers, avgBasket,
+  fillRate, dailyObjective, estimatedMargin, plannedHours, actualHours,
 }: KpiCardsProps) {
   const revenueDiff = yesterdayRevenue > 0 ? ((dailyRevenue - yesterdayRevenue) / yesterdayRevenue * 100) : 0
-  const hourDiff = plannedHours > 0 ? ((actualHours - plannedHours) / plannedHours * 100) : 0
+  const hourDiff    = plannedHours > 0 ? ((actualHours - plannedHours) / plannedHours * 100) : 0
+  const revenueProgress = dailyObjective > 0 ? (dailyRevenue / dailyObjective) * 100 : 0
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger">
       <KPICard
         title="CA du jour"
-        value={`${dailyRevenue.toFixed(0)}€`}
+        value={`${dailyRevenue.toFixed(0)} €`}
         subtitle={`${revenueDiff >= 0 ? '+' : ''}${revenueDiff.toFixed(1)}% vs hier`}
         trend={revenueDiff >= 0 ? 'up' : 'down'}
         icon={<Euro className="w-4 h-4" />}
+        progress={revenueProgress}
         color="green"
+        delay={0}
       />
       <KPICard
         title="Couverts"
         value={covers.toString()}
-        subtitle={`Panier moyen ${avgBasket.toFixed(2)}€`}
+        subtitle={`Panier moy. ${avgBasket.toFixed(2)} €`}
         trend={covers >= 30 ? 'up' : covers >= 20 ? 'neutral' : 'down'}
         icon={<Users className="w-4 h-4" />}
+        progress={(covers / 90) * 100}
         color="blue"
+        delay={60}
       />
       <KPICard
         title="Taux de remplissage"
-        value={`${fillRate}%`}
-        subtitle={`Objectif: ${Math.round(dailyObjective / 35)}€/couvert`}
+        value={`${fillRate} %`}
+        subtitle={`Objectif ${Math.round(dailyObjective / 35)} € / couvert`}
         trend={fillRate >= 60 ? 'up' : fillRate >= 40 ? 'neutral' : 'down'}
         icon={<Percent className="w-4 h-4" />}
+        progress={fillRate}
         color="orange"
+        delay={120}
       />
       <KPICard
-        title="Marge brute estimée"
-        value={`${estimatedMargin.toFixed(1)}%`}
-        subtitle={`${Math.abs(hourDiff).toFixed(0)}% heures ${hourDiff >= 0 ? 'supplémentaires' : 'économisées'}`}
+        title="Marge brute"
+        value={`${estimatedMargin.toFixed(1)} %`}
+        subtitle={`${Math.abs(hourDiff).toFixed(0)} % heures ${hourDiff >= 0 ? 'suppl.' : 'économisées'}`}
         trend={hourDiff <= 0 ? 'up' : 'down'}
         icon={<ShoppingCart className="w-4 h-4" />}
+        progress={estimatedMargin}
         color={estimatedMargin >= 65 ? 'green' : estimatedMargin >= 55 ? 'orange' : 'red'}
+        delay={180}
       />
     </div>
   )

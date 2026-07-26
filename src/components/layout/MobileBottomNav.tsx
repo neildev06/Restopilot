@@ -8,18 +8,18 @@ import { LayoutDashboard, BookOpen, Package, ClipboardCheck, Users } from 'lucid
 
 const iconMap: Record<string, React.ReactNode> = {
   LayoutDashboard: <LayoutDashboard className="h-5 w-5" />,
-  BookOpen: <BookOpen className="h-5 w-5" />,
-  Package: <Package className="h-5 w-5" />,
-  ClipboardCheck: <ClipboardCheck className="h-5 w-5" />,
-  Users: <Users className="h-5 w-5" />,
+  BookOpen:        <BookOpen className="h-5 w-5" />,
+  Package:         <Package className="h-5 w-5" />,
+  ClipboardCheck:  <ClipboardCheck className="h-5 w-5" />,
+  Users:           <Users className="h-5 w-5" />,
 }
 
 export function MobileBottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md">
+      <div className="flex items-center justify-around h-16 px-2 safe-area-inset-bottom">
         {MOBILE_NAV_ITEMS.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (
@@ -27,12 +27,22 @@ export function MobileBottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors",
-                isActive ? "text-terracotta" : "text-gray-500 dark:text-gray-400"
+                'flex flex-col items-center gap-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider transition-all duration-150 rounded-lg',
+                isActive
+                  ? 'text-ember'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {iconMap[item.icon]}
+              <span className={cn(
+                'transition-transform duration-150',
+                isActive && 'scale-110'
+              )}>
+                {iconMap[item.icon]}
+              </span>
               <span>{item.label}</span>
+              {isActive && (
+                <span className="w-1 h-1 rounded-full bg-ember" />
+              )}
             </Link>
           )
         })}

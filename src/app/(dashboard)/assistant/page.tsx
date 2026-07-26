@@ -92,7 +92,7 @@ function getAnomalyReport(): Message {
   // Check temperature
   const tempAlerts = DEMO_TEMPERATURES.filter(t => t.is_alert)
   if (tempAlerts.length > 0) {
-    anomalies.push(`🔴 **Température anormale** : ${tempAlerts[0].equipment} à ${tempAlerts[0].temperature}°C`)
+    anomalies.push(`🔴 **Température anormale** : ${tempAlerts[0].equipment_name} à ${tempAlerts[0].temperature}°C`)
   }
 
   // Check incidents
